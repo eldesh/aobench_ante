@@ -3,6 +3,7 @@ type Vec = x: float, y: float, z: float
 type Triple a = first: a, second: a, third: a
 type Sphere = center: Vec, radius: float
 type Plane = p: Vec, n: Vec
+type Ray = org: Vec, dir: Vec
 
 width: usz = 256
 height: usz = 256
@@ -19,11 +20,50 @@ init () : Triple Sphere, Plane =
   ss, plane
 
 
+// inner product
+iprod (v0:Vec) (v1:Vec) : float =
+  (v0.x * v1.x) + (v0.y * v1.y) + (v0.z * v1.z)
+
+
+abs v : float =
+  if 0.0 <= v then v
+  else 0.0 - v
+
+
+sqrt (v:float) : float =
+  go c =
+    diff = v - c * c
+    if -0.001 < diff and diff < 0.001
+    then c
+    else if diff <= -0.001
+    then go (c - (v - c) / 2.0)
+    else go (c + (v - c) / 2.0)
+  go 1.0
+
+
+vnormalize (c:Vec) : Vec =
+  length = sqrt (iprod c c)
+  print "length: "
+  print length
+  if abs length > 0.00000000001
+  then Vec (c.x / length) (c.y / length) (c.z / length)
+  else c
+
+
+negate (n:float) : float =
+  0.0 - n
+
+
 render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
   fimg = calloc (w * h * 3) 8
   iter (Range 0 h) fn (y:usz) ->
     iter (Range 0 w) fn (x:usz) ->
-      print y
+      iter (Range 0 nsubsamples) fn (v:usz) ->
+        iter (Range 0 nsubsamples) fn (u:usz) ->
+          zero = Vec 0.0 0.0 0.0
+          px   =       (cast x + (cast u / cast nsubsamples) - (cast w/2.0)) / (cast w/2.0)
+          py   = negate(cast y + (cast v / cast nsubsamples) - (cast h/2.0)) / (cast h/2.0)
+          ray  = Ray zero (vnormalize (Vec px py -1.0))
 
 
 print "init_scene..."
