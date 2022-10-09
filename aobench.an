@@ -10,14 +10,6 @@ nsubsamples = 2
 nao_samples = 8
 
 
-impl Iterator (Range usz) usz with
-  next range =
-    if range.start >= range.end
-    then None
-    else
-      next = Range (range.start + 1) range.end
-      Some (next, range.start)
-
 init () : Triple Sphere, Plane =
   ss    = Triple (Sphere (Vec -2.0 0.0 -3.5) 0.5)
                  (Sphere (Vec -0.5 0.0 -3.0) 0.5)
@@ -25,6 +17,7 @@ init () : Triple Sphere, Plane =
   plane = Plane  (Vec 0.0 -0.5 0.0)
                  (Vec 0.0  1.0 0.0)
   ss, plane
+
 
 render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
   fimg = calloc (w * h * 3) 8
