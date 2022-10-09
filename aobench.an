@@ -1,35 +1,42 @@
-width  = 256
-height = 256
+
+type Vec = x: float, y: float, z: float
+type Triple a = first: a, second: a, third: a
+type Sphere = center: Vec, radius: float
+type Plane = p: Vec, n: Vec
+
+width: usz = 256
+height: usz = 256
 nsubsamples = 2
 nao_samples = 8
 
-type Vec = x: float, y: float, z: float
 
-type Triple a = first: a, second: a, third: a
+impl Iterator (Range usz) usz with
+  next range =
+    if range.start >= range.end
+    then None
+    else
+      next = Range (range.start + 1) range.end
+      Some (next, range.start)
 
-type Sphere = center: Vec, radius: float
+init () : Triple Sphere, Plane =
+  ss    = Triple (Sphere (Vec -2.0 0.0 -3.5) 0.5)
+                 (Sphere (Vec -0.5 0.0 -3.0) 0.5)
+                 (Sphere (Vec  1.0 0.0 -2.2) 0.5)
+  plane = Plane  (Vec 0.0 -0.5 0.0)
+                 (Vec 0.0  1.0 0.0)
+  ss, plane
 
-type Plane = p: Vec, n: Vec
-
-init_scene : Triple Sphere, Plane =
-    ss = Triple (Sphere (Vec -2.0 0.0 -3.5) 0.5)
-                (Sphere (Vec -0.5 0.0 -3.0) 0.5)
-                (Sphere (Vec  1.0 0.0 -2.2) 0.5)
-    plane = Plane (Vec 0.0 -0.5 0.0)
-                  (Vec 0.0  1.0 0.0)
-    ss, plane
-
-render img width height nsubsamples spheres plane = ()
+render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
+  fimg = calloc (w * h * 3) 8
+  iter (Range 0 h) fn (y:usz) ->
+    iter (Range 0 w) fn (x:usz) ->
+      print y
 
 
-main () =
-    print "init_scene...\n"
-    spheres, plane = init_scene
-    
-    print "rendering...\n"
-    
-    fp = fopen (cast "test.ppm") (cast "w")
-    fclose fp
-
-main ()
+print "init_scene..."
+spheres, plane = init ()
+print "rendering..."
+img = calloc (width * height * 3) 1
+render img width height nsubsamples spheres plane
+free img
 
