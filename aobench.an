@@ -4,6 +4,8 @@ type Triple a = first: a, second: a, third: a
 type Sphere = center: Vec, radius: float
 type Plane = p: Vec, n: Vec
 type Ray = org: Vec, dir: Vec
+type Isect = t: float, p: Vec, n: Vec , hit: bool
+
 
 width: usz = 256
 height: usz = 256
@@ -74,6 +76,31 @@ negate (n:float) : float =
   0.0 - n
 
 
+ray_sphere_intersect isect (r:Ray) (s:Sphere) =
+  rs = Vec (r.org.x - s.center.x)
+           (r.org.y - s.center.y)
+           (r.org.z - s.center.z)
+  b = iprod rs r.dir
+  c = iprod rs rs - s.radius * s.radius
+  d = b * b - c
+  if d > 0.0
+  then
+    t = negate b - sqrt d
+    if t > 0.0 and t < isect.t
+    then
+      p = Vec (r.org.x + r.dir.x * t)
+              (r.org.y + r.dir.y * t)
+              (r.org.z + r.dir.z * t)
+      n = Vec (p.x - s.center.x)
+              (p.y - s.center.y)
+              (p.z - s.center.z)
+      Isect t p (vnormalize n) true
+    else
+      isect
+  else
+    isect
+
+
 render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
   fimg = calloc (w * h * 3) 8
   iter (Range 0 h) fn (y:usz) ->
@@ -85,9 +112,10 @@ render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
           py   = negate(cast y + (cast v / cast nsubsamples) - (cast h/2.0)) / (cast h/2.0)
           ray  = Ray zero (vnormalize (Vec px py -1.0))
 
+          isect = Isect 100000000000000000.0 zero zero false
+          isect2 = ray_sphere_intersect isect ray spheres.first
 
-// printne (3.14, "hoge")
-// printne (1, "foo", 3.14)
+
 print "init_scene..."
 spheres, plane = init ()
 print "rendering..."
