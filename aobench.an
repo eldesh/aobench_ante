@@ -10,6 +10,26 @@ height: usz = 256
 nsubsamples = 2
 nao_samples = 8
 
+impl Cast float string with
+  cast f =
+    conv f =
+      if f < 0.0 then
+        "-${conv (0.0-f)}"
+      else
+        uint: u64 = cast f
+        f2 = f - cast uint
+        // Show up to 5 decimal places
+        fr: u64 = cast (f2 * 10_000.0)
+        "${uint}.${fr}"
+    conv f
+
+
+// impl Print (a, b) given Cast a string, Cast b string with
+//   printne t = match t | (a, b) -> printne "(${a},${b})"
+
+impl Print (a, b, c) given Cast a string, Cast b string, Cast c string with
+  printne t = match t | (a, b, c) -> printne "(${a},${b},${c})"
+
 
 init () : Triple Sphere, Plane =
   ss    = Triple (Sphere (Vec -2.0 0.0 -3.5) 0.5)
@@ -31,20 +51,20 @@ abs v : float =
 
 
 sqrt (v:float) : float =
-  go c =
-    diff = v - c * c
-    if -0.001 < diff and diff < 0.001
-    then c
-    else if diff <= -0.001
-    then go (c - (v - c) / 2.0)
-    else go (c + (v - c) / 2.0)
-  go 1.0
+  go x m =
+    // print x
+    if abs (x - m) < 0.0000000000001 then x
+    else
+      go ((x + (v / x)) / 2.0) x
+  go (v / 2.0) 0.0
+
+// x = (sqrtr 123.0)
+// print "${x} * ${x} = ${x * x}"
 
 
 vnormalize (c:Vec) : Vec =
   length = sqrt (iprod c c)
-  print "length: "
-  print length
+  // print "length: ${length}"
   if abs length > 0.00000000001
   then Vec (c.x / length) (c.y / length) (c.z / length)
   else c
@@ -66,6 +86,8 @@ render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
           ray  = Ray zero (vnormalize (Vec px py -1.0))
 
 
+// printne (3.14, "hoge")
+// printne (1, "foo", 3.14)
 print "init_scene..."
 spheres, plane = init ()
 print "rendering..."
