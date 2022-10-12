@@ -112,8 +112,10 @@ render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
           py   = negate(cast y + (cast v / cast nsubsamples) - (cast h/2.0)) / (cast h/2.0)
           ray  = Ray zero (vnormalize (Vec px py -1.0))
 
-          isect = Isect 100000000000000000.0 zero zero false
-          isect2 = ray_sphere_intersect isect ray spheres.first
+          isect1 = Isect 100000000000000000.0 zero zero false
+          isect2 = ray_sphere_intersect isect1 ray spheres.first
+          isect3 = ray_sphere_intersect isect2 ray spheres.second
+          isect4 = ray_sphere_intersect isect3 ray spheres.third
 
 
 print "init_scene..."
