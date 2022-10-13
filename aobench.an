@@ -1,3 +1,5 @@
+import Random.rand
+import Random.randReal
 
 type Vec = x: float, y: float, z: float
 type Triple a = first: a, second: a, third: a
@@ -71,6 +73,11 @@ vnormalize (c:Vec) : Vec =
   then Vec (c.x / length) (c.y / length) (c.z / length)
   else c
 
+vcross (v0:Vec) (v1:Vec) : Vec =
+  Vec (v0.y * v1.z - v0.z * v1.y)
+      (v0.z * v1.x - v0.x * v1.z)
+      (v0.x * v1.y - v0.y * v1.x)
+
 
 negate (n:float) : float =
   0.0 - n
@@ -119,6 +126,68 @@ ray_plane_intersect isect (r:Ray) (p:Plane) =
       isect
 
 
+orthoBasis (n: Vec) : (Vec, Vec, Vec) =
+  basis2 = n
+  basis1 = if n.x < 0.6 and n.x > -0.6 then
+             Vec 1.0 0.0 0.0
+           else if n.y < 0.6 and n.y > -0.6 then
+             Vec 0.0 1.0 0.0
+           else if n.z < 0.6 and n.z > -0.6 then
+             Vec 0.0 0.0 1.0
+           else
+             Vec 1.0 0.0 0.0
+  basis0 = vnormalize (vcross basis1 basis2)
+  basis1 = vnormalize (vcross basis2 basis0)
+  basis0, basis1, basis2
+
+
+drand48 () : float =
+  _ = rand 48271 1073741823
+  randReal 1.0
+
+
+ambient_occlusion (isect:Isect) (spheres:Triple Sphere) plane =
+  ntheta: usz = nao_samples
+  nphi   = nao_samples
+  eps: float = 0.0001
+  p      = Vec (isect.p.x + eps * isect.n.x)
+               (isect.p.y + eps * isect.n.y)
+               (isect.p.z + eps * isect.n.z)
+  basis0, basis1, basis2 = orthoBasis (isect.n)
+  occlusion = mut 0.0
+
+  iter (Range 0 ntheta) fn (j:usz) -> ()
+  //   iter (Range 0 nphi) fn i ->
+  //     // theta = sqrt(drand48())
+  // for {begin=0, limit=ntheta, step=succ} (fn j=>
+  //   for {begin=0, limit=nphi, step=succ} (fn i=>
+  //     let
+  //       val theta = Math.sqrt(drand48())
+  //       val phi   = 2.0 * Math.pi * drand48()
+  //       val (x,y,z) = ( (Math.cos phi) * theta
+  //                     , (Math.sin phi) * theta
+  //                     , Math.sqrt (1.0 - theta * theta))
+  //       val rx = x * (#x basis0) + y * (#x basis1) + z * (#x basis2)
+  //       val ry = x * (#y basis0) + y * (#y basis1) + z * (#y basis2)
+  //       val rz = x * (#z basis0) + y * (#z basis1) + z * (#z basis2)
+  //       val zero = { x=0.0, y=0.0, z=0.0 }
+  //       val ray = { org= p, dir= { x= rx, y= ry, z= rz } }
+  //       val occIsect = { t= 1.0e17, p=zero, n=zero, hit= false }
+  //       val occIsect = ray_sphere_intersect occIsect ray (#1 spheres)
+  //       val occIsect = ray_sphere_intersect occIsect ray (#2 spheres)
+  //       val occIsect = ray_sphere_intersect occIsect ray (#3 spheres)
+  //       val occIsect = ray_plane_intersect occIsect ray plane
+  //     in
+  //       occlusion := !occlusion + (if #hit occIsect then 1.0 else 0.0)
+  //     end
+  //   ));
+  // let val occlusion = (real (ntheta * nphi) - !occlusion)
+  //                   / real (ntheta * nphi)
+  // in
+  //   { x=occlusion, y=occlusion, z=occlusion }
+  // end
+
+
 render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
   fimg = calloc (w * h * 3) 8
   iter (Range 0 h) fn (y:usz) ->
@@ -136,12 +205,12 @@ render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
           isect4 = ray_sphere_intersect isect3 ray spheres.third
           isect5 = ray_plane_intersect  isect4 ray plane
 
-          // if isect5.hit
-          // then
-          //   // col = ambient_occlusion isect5 spheres plane
-          //   ()
-          // else
-          //   ()
+          if isect5.hit
+          then
+            col = ambient_occlusion isect5 spheres plane
+            ()
+          else
+            ()
 
 
 print "init_scene..."
