@@ -100,6 +100,24 @@ ray_sphere_intersect isect (r:Ray) (s:Sphere) =
   else
     isect
 
+ray_plane_intersect isect (r:Ray) (p:Plane) =
+  d = negate(iprod p.p p.n)
+  v = iprod r.dir p.n
+  if abs v < 0.00000000000000001
+  then isect
+  else
+    t = negate ((iprod r.org p.n) + d) / v
+    if t > 0.0 and t < isect.t
+    then
+      Isect t
+            (Vec (r.org.x + r.dir.x * t)
+                 (r.org.y + r.dir.y * t)
+                 (r.org.z + r.dir.z * t))
+            p.n
+            true
+    else
+      isect
+
 
 render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
   fimg = calloc (w * h * 3) 8
@@ -116,6 +134,14 @@ render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
           isect2 = ray_sphere_intersect isect1 ray spheres.first
           isect3 = ray_sphere_intersect isect2 ray spheres.second
           isect4 = ray_sphere_intersect isect3 ray spheres.third
+          isect5 = ray_plane_intersect  isect4 ray plane
+
+          // if isect5.hit
+          // then
+          //   // col = ambient_occlusion isect5 spheres plane
+          //   ()
+          // else
+          //   ()
 
 
 print "init_scene..."
