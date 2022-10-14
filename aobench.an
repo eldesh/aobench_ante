@@ -1,5 +1,5 @@
-import Random.rand
-import Random.randReal
+import Random.drand48
+import Math.sin cos
 
 type Vec = x: float, y: float, z: float
 type Triple a = first: a, second: a, third: a
@@ -13,26 +13,6 @@ width: usz = 256
 height: usz = 256
 nsubsamples = 2
 nao_samples = 8
-
-impl Cast float string with
-  cast f =
-    conv f =
-      if f < 0.0 then
-        "-${conv (0.0-f)}"
-      else
-        uint: u64 = cast f
-        f2 = f - cast uint
-        // Show up to 5 decimal places
-        fr: u64 = cast (f2 * 10_000.0)
-        "${uint}.${fr}"
-    conv f
-
-
-// impl Print (a, b) given Cast a string, Cast b string with
-//   printne t = match t | (a, b) -> printne "(${a},${b})"
-
-impl Print (a, b, c) given Cast a string, Cast b string, Cast c string with
-  printne t = match t | (a, b, c) -> printne "(${a},${b},${c})"
 
 
 init () : Triple Sphere, Plane =
@@ -107,6 +87,7 @@ ray_sphere_intersect isect (r:Ray) (s:Sphere) =
   else
     isect
 
+
 ray_plane_intersect isect (r:Ray) (p:Plane) =
   d = negate(iprod p.p p.n)
   v = iprod r.dir p.n
@@ -141,55 +122,51 @@ orthoBasis (n: Vec) : (Vec, Vec, Vec) =
   basis0, basis1, basis2
 
 
-drand48 () : float =
-  _ = rand 48271 1073741823
-  randReal 1.0
+// drand48 () : float = Random.drand48 ()
 
 
 ambient_occlusion (isect:Isect) (spheres:Triple Sphere) plane =
-  ntheta: usz = nao_samples
+  ntheta = 8
   nphi   = nao_samples
-  eps: float = 0.0001
+  eps    = 0.0001
   p      = Vec (isect.p.x + eps * isect.n.x)
                (isect.p.y + eps * isect.n.y)
                (isect.p.z + eps * isect.n.z)
   basis0, basis1, basis2 = orthoBasis (isect.n)
   occlusion = mut 0.0
 
-  iter (Range 0 ntheta) fn (j:usz) -> ()
-  //   iter (Range 0 nphi) fn i ->
-  //     // theta = sqrt(drand48())
-  // for {begin=0, limit=ntheta, step=succ} (fn j=>
-  //   for {begin=0, limit=nphi, step=succ} (fn i=>
-  //     let
-  //       val theta = Math.sqrt(drand48())
-  //       val phi   = 2.0 * Math.pi * drand48()
-  //       val (x,y,z) = ( (Math.cos phi) * theta
-  //                     , (Math.sin phi) * theta
-  //                     , Math.sqrt (1.0 - theta * theta))
-  //       val rx = x * (#x basis0) + y * (#x basis1) + z * (#x basis2)
-  //       val ry = x * (#y basis0) + y * (#y basis1) + z * (#y basis2)
-  //       val rz = x * (#z basis0) + y * (#z basis1) + z * (#z basis2)
-  //       val zero = { x=0.0, y=0.0, z=0.0 }
-  //       val ray = { org= p, dir= { x= rx, y= ry, z= rz } }
-  //       val occIsect = { t= 1.0e17, p=zero, n=zero, hit= false }
-  //       val occIsect = ray_sphere_intersect occIsect ray (#1 spheres)
-  //       val occIsect = ray_sphere_intersect occIsect ray (#2 spheres)
-  //       val occIsect = ray_sphere_intersect occIsect ray (#3 spheres)
-  //       val occIsect = ray_plane_intersect occIsect ray plane
-  //     in
-  //       occlusion := !occlusion + (if #hit occIsect then 1.0 else 0.0)
-  //     end
-  //   ));
-  // let val occlusion = (real (ntheta * nphi) - !occlusion)
-  //                   / real (ntheta * nphi)
-  // in
-  //   { x=occlusion, y=occlusion, z=occlusion }
-  // end
+  iter (Range 0 8) fn (j:usz) ->
+    iter (Range 0 8) fn i ->
+      theta = sqrt(drand48())
+      phi   = 2.0 * 3.1415926535 * drand48()
+      x,y,z = (cos phi) * theta,
+              (sin phi) * theta,
+              sqrt (1.0 - theta * theta)
+      rx    = x * basis0.x + y * basis1.x + z * basis2.x
+      ry    = x * basis0.y + y * basis1.y + z * basis2.y
+      rz    = x * basis0.z + y * basis1.z + z * basis2.z
+
+      zero  = Vec 0.0 0.0 0.0
+      ray   = Ray p (Vec rx ry rz)
+      occIsect1 = Isect 100000000000000000.0 zero zero false
+      occIsect2 = ray_sphere_intersect occIsect1 ray spheres.first
+      occIsect3 = ray_sphere_intersect occIsect2 ray spheres.second
+      occIsect4 = ray_sphere_intersect occIsect3 ray spheres.third
+      occIsect5 = ray_plane_intersect  occIsect4 ray plane
+
+      occlusion := @occlusion + if occIsect5.hit then 1.0 else 0.0
+
+  occ = (cast (ntheta * 8) - @occlusion) / cast (ntheta * 8)
+  Vec occ occ occ
 
 
-render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
-  fimg = calloc (w * h * 3) 8
+clamp (f: float) : u8 =
+  byte: u64 = cast (f * 255.5)
+  cast byte
+
+
+render (img: Ptr u8) (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
+  fimg : Ptr float = malloc (256 * 256 * 3 * 8)
   iter (Range 0 h) fn (y:usz) ->
     iter (Range 0 w) fn (x:usz) ->
       iter (Range 0 nsubsamples) fn (v:usz) ->
@@ -208,15 +185,53 @@ render img (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
           if isect5.hit
           then
             col = ambient_occlusion isect5 spheres plane
-            ()
+            base: usz = 3*(y*w+x)
+            array_insert fimg (base+0) (fimg#(base+0) + col.x)
+            array_insert fimg (base+1) (fimg#(base+1) + col.y)
+            array_insert fimg (base+2) (fimg#(base+2) + col.z)
           else
             ()
+      base: usz = 3*(y*w+x)
+      array_insert fimg (base+0) (fimg#(base+0) / cast (nsubsamples * nsubsamples))
+      array_insert fimg (base+1) (fimg#(base+1) / cast (nsubsamples * nsubsamples))
+      array_insert fimg (base+2) (fimg#(base+2) / cast (nsubsamples * nsubsamples))
+
+      array_insert img (base+0) (clamp (fimg#(base+0)))
+      array_insert img (base+1) (clamp (fimg#(base+1)))
+      array_insert img (base+2) (clamp (fimg#(base+2)))
 
 
-print "init_scene..."
-spheres, plane = init ()
-print "rendering..."
-img = calloc (width * height * 3) 1
-render img width height nsubsamples spheres plane
-free img
+saveppm fname w h (img: Ptr u8) =
+  print "saving..."
+  file: OutFile = cast fname
+  fputs "P6\n".c_string file
+  fputs "256 256\n".c_string file
+  fputs "255\n".c_string file
+  // divides loop for avoiding stack overflow
+  iter (Range 0 (256*256)) fn (i:usz) ->
+    xu: u32 = cast (img#i)
+    fputc (transmute xu) file
+  iter (Range (256*256) (256*256*2)) fn (i:usz) ->
+    xu: u32 = cast (img#i)
+    fputc (transmute xu) file
+  iter (Range (256*256*2) (256*256*3)) fn (i:usz) ->
+    xu: u32 = cast (img#i)
+    fputc (transmute xu) file
+
+  fclose file.f
+
+
+main () =
+  print "init_scene..."
+  spheres, plane = init ()
+  print "rendering..."
+  //img: Ptr u8 = calloc (width * height * 3 : usz) 1
+  img = calloc (256 * 256 * 3) 1 : Ptr u8
+  render img 256 256 2 spheres plane
+  saveppm "aobench.ppm" 256 256 img
+  free img
+
+
+main ()
+
 
