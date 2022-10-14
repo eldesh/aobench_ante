@@ -207,16 +207,14 @@ saveppm fname w h (img: Ptr u8) =
   fputs "P6\n".c_string file
   fputs "256 256\n".c_string file
   fputs "255\n".c_string file
-  // divides loop for avoiding stack overflow
   iter (Range 0 (256*256)) fn (i:usz) ->
-    xu: u32 = cast (img#i)
-    fputc (transmute xu) file
-  iter (Range (256*256) (256*256*2)) fn (i:usz) ->
-    xu: u32 = cast (img#i)
-    fputc (transmute xu) file
-  iter (Range (256*256*2) (256*256*3)) fn (i:usz) ->
-    xu: u32 = cast (img#i)
-    fputc (transmute xu) file
+    // divide loop for avoiding stack overflow
+    x0: u32 = cast (img#(i*3+0))
+    fputc (transmute x0) file
+    x1: u32 = cast (img#(i*3+1))
+    fputc (transmute x1) file
+    x2: u32 = cast (img#(i*3+2))
+    fputc (transmute x2) file
 
   fclose file.f
 
