@@ -1,6 +1,6 @@
 
 ANTE       ?= ante
-ANTE_FLAGS +=
+ANTE_FLAGS += -O 3
 
 SRC := Random.an Math.an aobench.an
 TARGET := aobench
