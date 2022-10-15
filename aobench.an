@@ -199,6 +199,7 @@ render (img: Ptr u8) (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane :
       array_insert img (base+0) (clamp (fimg#(base+0)))
       array_insert img (base+1) (clamp (fimg#(base+1)))
       array_insert img (base+2) (clamp (fimg#(base+2)))
+  // free fimg // this raises a type error
 
 
 saveppm fname w h (img: Ptr u8) =
