@@ -4,7 +4,3 @@
 // extern srand : u32
 extern drand48 : unit -> float
 
-rand (_: i32) (_: i32) : i32 = 0
-
-randReal _ : float = 0.0
-
