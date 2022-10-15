@@ -27,11 +27,13 @@ Then a file `aobench.ppm` is generated in the same directory.
 
 The following results were obtained in the development environment:
 
-|compiler|time    |
-|--------|--------|
-|ante    |0m7.960s|
-|gcc     |0m0.949s|
-|polyml  |0m4.217s|
+|compiler  |time    |
+|----------|--------|
+|ante(dbg) |0m7.487s|
+|ante(-O3) |0m2.431s|
+|gcc(-O3)  |0m0.658s|
+|clang(-O3)|0m0.675s|
+|polyml    |0m4.745s|
 
 
 Where the implementations for GCC and Poly/ML were taken from [eldesh/aobench_sml](https://github.com/eldesh/aobench_sml).
