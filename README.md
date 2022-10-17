@@ -29,12 +29,13 @@ The following results were obtained in the development environment:
 
 |compiler  |time    |
 |----------|--------|
-|ante(dbg) |0m7.487s|
-|ante(-O3) |0m2.431s|
+|ante(dbg) |0m5.127s|
+|ante(-O3) |0m1.553s|
 |gcc(-O3)  |0m0.658s|
 |clang(-O3)|0m0.675s|
+|mlton     |0m2.072s|
 |polyml    |0m4.745s|
 
 
-Where the implementations for GCC and Poly/ML were taken from [eldesh/aobench_sml](https://github.com/eldesh/aobench_sml).
+Where the implementations for GCC, Poly/ML and MLton were taken from [eldesh/aobench_sml](https://github.com/eldesh/aobench_sml).
 
