@@ -1,5 +1,5 @@
 import Random.drand48
-import Math.sin cos
+import Math.sin cos sqrt
 
 type Vec = x: float, y: float, z: float
 type Triple a = first: a, second: a, third: a
@@ -32,18 +32,6 @@ iprod (v0:Vec) (v1:Vec) : float =
 abs v : float =
   if 0.0 <= v then v
   else 0.0 - v
-
-
-sqrt (v:float) : float =
-  go x m =
-    // print x
-    if abs (x - m) < 0.0000000000001 then x
-    else
-      go ((x + (v / x)) / 2.0) x
-  go (v / 2.0) 0.0
-
-// x = (sqrtr 123.0)
-// print "${x} * ${x} = ${x * x}"
 
 
 vnormalize (c:Vec) : Vec =

@@ -1,4 +1,6 @@
 
-extern sin : float -> float
-extern cos : float -> float
+extern
+  sin : float -> float
+  cos : float -> float
+  sqrt : float -> float
 
