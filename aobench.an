@@ -1,12 +1,12 @@
 import Random.drand48
 import Math.sin cos sqrt
 
-type Vec = x: float, y: float, z: float
+type Vec = x: f64, y: f64, z: f64
 type Triple a = first: a, second: a, third: a
-type Sphere = center: Vec, radius: float
+type Sphere = center: Vec, radius: f64
 type Plane = p: Vec, n: Vec
 type Ray = org: Vec, dir: Vec
-type Isect = t: float, p: Vec, n: Vec , hit: bool
+type Isect = t: f64, p: Vec, n: Vec , hit: bool
 
 
 width: usz = 256
@@ -25,11 +25,11 @@ init () : Triple Sphere, Plane =
 
 
 // inner product
-iprod (v0:Vec) (v1:Vec) : float =
+iprod (v0:Vec) (v1:Vec) : f64 =
   (v0.x * v1.x) + (v0.y * v1.y) + (v0.z * v1.z)
 
 
-abs v : float =
+abs v : f64 =
   if 0.0 <= v then v
   else 0.0 - v
 
@@ -47,7 +47,7 @@ vcross (v0:Vec) (v1:Vec) : Vec =
       (v0.x * v1.y - v0.y * v1.x)
 
 
-negate (n:float) : float =
+negate (n:f64) : f64 =
   0.0 - n
 
 
@@ -110,7 +110,7 @@ orthoBasis (n: Vec) : (Vec, Vec, Vec) =
   basis0, basis1, basis2
 
 
-// drand48 () : float = Random.drand48 ()
+// drand48 () : f64 = Random.drand48 ()
 
 
 ambient_occlusion (isect:Isect) (spheres:Triple Sphere) plane =
@@ -148,13 +148,13 @@ ambient_occlusion (isect:Isect) (spheres:Triple Sphere) plane =
   Vec occ occ occ
 
 
-clamp (f: float) : u8 =
+clamp (f: f64) : u8 =
   byte: u64 = cast (f * 255.5)
   cast byte
 
 
 render (img: Ptr u8) (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
-  fimg : Ptr float = malloc (256 * 256 * 3 * 8)
+  fimg : Ptr f64 = malloc (256 * 256 * 3 * 8)
   iter (Range 0 h) fn (y:usz) ->
     iter (Range 0 w) fn (x:usz) ->
       iter (Range 0 nsubsamples) fn (v:usz) ->
@@ -192,7 +192,7 @@ render (img: Ptr u8) (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane :
 
 saveppm fname w h (img: Ptr u8) =
   print "saving..."
-  file: OutFile = cast fname
+  file: OutFile = open_outfile fname
   fputs "P6\n".c_string file
   fputs "256 256\n".c_string file
   fputs "255\n".c_string file
