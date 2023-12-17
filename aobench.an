@@ -9,8 +9,8 @@ type Ray = org: Vec, dir: Vec
 type Isect = t: F64, p: Vec, n: Vec , hit: Bool
 
 
-width: usz = 256
-height: usz = 256
+width: Usz = 256
+height: Usz = 256
 nsubsamples = 2
 nao_samples = 8
 
@@ -123,7 +123,7 @@ ambient_occlusion (isect:Isect) (spheres:Triple Sphere) plane =
   basis0, basis1, basis2 = orthoBasis (isect.n)
   occlusion = mut 0.0
 
-  iter (Range 0 8) fn (j:usz) ->
+  iter (Range 0 8) fn (j:Usz) ->
     iter (Range 0 8) fn i ->
       theta = sqrt(drand48())
       phi   = 2.0 * 3.1415926535 * drand48()
@@ -153,12 +153,12 @@ clamp (f: Float a) : U8 =
   cast byte
 
 
-render (img: Ptr U8) (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane : unit =
+render (img: Ptr U8) (w:Usz) (h:Usz) nsubsamples (spheres:Triple Sphere) plane : unit =
   fimg : Ptr F64 = malloc (256 * 256 * 3 * 8)
-  iter (Range 0 h) fn (y:usz) ->
-    iter (Range 0 w) fn (x:usz) ->
-      iter (Range 0 nsubsamples) fn (v:usz) ->
-        iter (Range 0 nsubsamples) fn (u:usz) ->
+  iter (Range 0 h) fn (y:Usz) ->
+    iter (Range 0 w) fn (x:Usz) ->
+      iter (Range 0 nsubsamples) fn (v:Usz) ->
+        iter (Range 0 nsubsamples) fn (u:Usz) ->
           zero = Vec 0.0 0.0 0.0
           px   =       (cast x + (cast u / cast nsubsamples) - (cast w/2.0)) / (cast w/2.0)
           py   = negate(cast y + (cast v / cast nsubsamples) - (cast h/2.0)) / (cast h/2.0)
@@ -173,13 +173,13 @@ render (img: Ptr U8) (w:usz) (h:usz) nsubsamples (spheres:Triple Sphere) plane :
           if isect5.hit
           then
             col = ambient_occlusion isect5 spheres plane
-            base: usz = 3*(y*w+x)
+            base: Usz = 3*(y*w+x)
             array_insert fimg (base+0) (fimg#(base+0) + col.x)
             array_insert fimg (base+1) (fimg#(base+1) + col.y)
             array_insert fimg (base+2) (fimg#(base+2) + col.z)
           else
             ()
-      base: usz = 3*(y*w+x)
+      base: Usz = 3*(y*w+x)
       array_insert fimg (base+0) (fimg#(base+0) / cast (nsubsamples * nsubsamples))
       array_insert fimg (base+1) (fimg#(base+1) / cast (nsubsamples * nsubsamples))
       array_insert fimg (base+2) (fimg#(base+2) / cast (nsubsamples * nsubsamples))
@@ -212,7 +212,7 @@ main () =
   print "init_scene..."
   spheres, plane = init ()
   print "rendering..."
-  //img: Ptr U8 = calloc (width * height * 3 : usz) 1
+  //img: Ptr U8 = calloc (width * height * 3 : Usz) 1
   img = calloc (256 * 256 * 3) 1 : Ptr U8
   render img 256 256 2 spheres plane
   saveppm "aobench.ppm" 256 256 img
