@@ -153,7 +153,7 @@ clamp (f: Float a) : U8 =
   cast byte
 
 
-render (img: Ptr U8) (w:Usz) (h:Usz) nsubsamples (spheres:Triple Sphere) plane : unit =
+render (img: Ptr U8) (w:Usz) (h:Usz) nsubsamples (spheres:Triple Sphere) plane : Unit =
   fimg : Ptr F64 = malloc (256 * 256 * 3 * 8)
   iter (Range 0 h) fn (y:Usz) ->
     iter (Range 0 w) fn (x:Usz) ->
