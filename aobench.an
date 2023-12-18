@@ -114,7 +114,7 @@ orthoBasis (n: Vec) : (Vec, Vec, Vec) =
 
 
 ambient_occlusion (isect:Isect) (spheres:Triple Sphere) plane =
-  ntheta = 8
+  ntheta = nao_samples
   nphi   = nao_samples
   eps    = 0.0001
   p      = Vec (isect.p.x + eps * isect.n.x)
@@ -123,8 +123,8 @@ ambient_occlusion (isect:Isect) (spheres:Triple Sphere) plane =
   basis0, basis1, basis2 = orthoBasis (isect.n)
   occlusion = mut 0.0
 
-  iter (Range 0 8) fn (j:Usz) ->
-    iter (Range 0 8) fn i ->
+  iter (Range 0 ntheta) fn _ ->
+    iter (Range 0 nphi) fn _ ->
       theta = sqrt(drand48())
       phi   = 2.0 * 3.1415926535 * drand48()
       x,y,z = (cos phi) * theta,
@@ -144,7 +144,7 @@ ambient_occlusion (isect:Isect) (spheres:Triple Sphere) plane =
 
       occlusion := @occlusion + if occIsect5.hit then 1.0 else 0.0
 
-  occ = (cast (ntheta * 8) - @occlusion) / cast (ntheta * 8)
+  occ = (cast (ntheta * nphi) - @occlusion) / cast (ntheta * nphi)
   Vec occ occ occ
 
 
@@ -154,7 +154,7 @@ clamp (f: Float a) : U8 =
 
 
 render (img: Ptr U8) (w:Usz) (h:Usz) nsubsamples (spheres:Triple Sphere) plane : Unit =
-  fimg : Ptr F64 = malloc (256 * 256 * 3 * 8)
+  fimg : Ptr F64 = malloc (w * h * 3 * size_of(MkType: Type F64))
   iter (Range 0 h) fn (y:Usz) ->
     iter (Range 0 w) fn (x:Usz) ->
       iter (Range 0 nsubsamples) fn (v:Usz) ->
@@ -194,9 +194,9 @@ saveppm fname w h (img: Ptr U8) =
   print "saving..."
   file: OutFile = open_outfile fname
   fputs "P6\n".c_string file
-  fputs "256 256\n".c_string file
+  fputs "${w} ${h}\n".c_string file
   fputs "255\n".c_string file
-  iter (Range 0 (256*256)) fn (i:Usz) ->
+  iter (Range 0 (w*h)) fn (i:Usz) ->
     // divide loop for avoiding stack overflow
     x0: U32 = cast (img#(i*3+0))
     fputc (transmute x0) file
@@ -212,10 +212,9 @@ main () =
   print "init_scene..."
   spheres, plane = init ()
   print "rendering..."
-  //img: Ptr U8 = calloc (width * height * 3 : Usz) 1
-  img = calloc (256 * 256 * 3) 1 : Ptr U8
-  render img 256 256 2 spheres plane
-  saveppm "aobench.ppm" 256 256 img
+  img: Ptr U8 = calloc (width * height * 3 : Usz) 1
+  render img width height nsubsamples spheres plane
+  saveppm "aobench.ppm" width height img
   free img
 
 
