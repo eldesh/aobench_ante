@@ -9,7 +9,7 @@ Ported [aobench](http://code.google.com/p/aobench/) program to Ante programming 
 
 > aobench is a small ambient occlusion renderer for benchmarking realworld floating point performance in various languages.
 
-This program was tested with ante 0.1.1 ([#139cf8c](https://github.com/jfecher/ante/tree/139cf8ca80a6f2e5c5152e42c1d4a4b521c2592f)).
+This program was tested with ante 0.1.1 ([#e38231f](https://github.com/jfecher/ante/tree/e38231ffa51b84a2ca53b4b0439d1ca5e0dea32a)).
 
 ## Execute
 
