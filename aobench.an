@@ -196,15 +196,7 @@ saveppm fname w h (img: Ptr U8) =
   fputs "P6\n".c_string file
   fputs "${w} ${h}\n".c_string file
   fputs "255\n".c_string file
-  iter (Range 0 (w*h)) fn (i:Usz) ->
-    // divide loop for avoiding stack overflow
-    x0: U32 = cast (img#(i*3+0))
-    fputc (transmute x0) file
-    x1: U32 = cast (img#(i*3+1))
-    fputc (transmute x1) file
-    x2: U32 = cast (img#(i*3+2))
-    fputc (transmute x2) file
-
+  fwrite img 3 (w*h) file
   fclose file.f
 
 
